@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>2.3.2.RELEASE</version>
+        <relativePath/> <!-- lookup parent from repository -->
+    </parent>
+    <groupId>com.docker</groupId>
+    <artifactId>demo</artifactId>
+    <version>0.0.1-SNAPSHOT</version>
+    <name>demo</name>
+    <description>Docker package Demo for Spring Boot</description>
+
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <java.version>1.8</java.version>
+        <docker.repostory>hub.xxxx.com</docker.repostory>
+        <docker.registry.name>platform</docker.registry.name>
+        <maven.build.timestamp.format>yyyyMMddHHmmss</maven.build.timestamp.format>
+    </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.junit.vintage</groupId>
+                    <artifactId>junit-vintage-engine</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+            <version>RELEASE</version>
+            <scope>compile</scope>
+        </dependency>
+    </dependencies>
+
+
+    <build>
+        <resources>
+            <resource>
+                <directory>src/main/resources/</directory>
+                <includes>
+                    <include>**/*.properties</include>
+                    <include>**/*.xml</include>
+                </includes>
+                <excludes>
+                    <exclude>**/*.txt</exclude>
+                </excludes>
+                <filtering>true</filtering>
+            </resource>
+        </resources>
+        <plugins>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+                <configuration>
+                    <mainClass>com.docker.demo.DemoApplication</mainClass>
+                </configuration>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>repackage</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+                         <plugin>
+                            <groupId>com.spotify</groupId>
+                            <artifactId>docker-maven-plugin</artifactId>
+                            <version>1.0.0</version>
+                            <executions>
+                                <!--执行 mvn package 时 自动 执行 mvn docker:build-->
+                                <execution>
+                                    <id>push-image</id>
+                                    <phase>package</phase>
+                                    <goals>
+                                        <goal>build</goal>
+            <!--                            <goal>push</goal>-->
+                                    </goals>
+                                </execution>
+                            </executions>
+                            <configuration>
+            <!--                    <imageName>${docker.repostory}/${docker.registry.name}/${project.artifactId}:${project.version}_${maven.build.timestamp}</imageName>-->
+                                <imageName>${project.artifactId}:${project.version}_${maven.build.timestamp}</imageName>
+                                <!--覆盖已存在的标签 镜像-->
+                                <forceTags>true</forceTags>
+                                <dockerDirectory>${project.basedir}/src/main/docker</dockerDirectory>
+                                <!--指定远程 docker api地址-->
+                                <dockerHost>http://192.168.200.239:2375</dockerHost>
+                                <resources>
+                                    <resource>
+                                        <targetPath>/</targetPath>
+                                       <!-- jar 包所在的路径 此处配置的 即对应 target 目录-->
+                                        <directory>${project.build.directory}</directory>
+                                        <!--需要包含的 jar包 ，这里对应的是 Dockerfile中添加的文件名-->
+                                        <include>${project.build.finalName}.jar</include>
+                                    </resource>
+                                </resources>
+                                <!--以下两行是为了docker push到DockerHub使用的。-->
+            <!--                    <serverId>docker-repo</serverId>-->
+            <!--                    <registryUrl>http://hub.xxxx.com</registryUrl>-->
+            <!--                    <pushImage>true</pushImage>-->
+                            </configuration>
+                        </plugin>
+        </plugins>
+    </build>
+
+
+
+</project>
